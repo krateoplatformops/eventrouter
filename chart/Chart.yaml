@@ -1,0 +1,13 @@
+apiVersion: v2
+name: eventrouter
+description: Krateo PlatformOps Event Router
+type: application
+icon: "https://github.com/projectkerberus/kerberus-dashboard/blob/main/docs/media/square_black_logo.png"
+
+version: VERSION
+appVersion: VERSION
+
+dependencies:
+  - name: helm-chart-library
+    version: 0.1.3
+    repository: http://charts.krateo.io
