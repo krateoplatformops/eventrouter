@@ -20,11 +20,14 @@ jobs:
       
       - name: Extract Version
         id: tagger
-        run: echo "::set-output name=version_tag::$(git describe --always --tags | sed 's/-/./2' | sed 's/-/./2' )"
-      
+        run: |  
+          echo "##[set-output name=version;]v${GITHUB_REF#$"refs/tags/v"}"
+          echo "##[set-output name=version_tag;]${GITHUB_REPOSITORY}:v${GITHUB_REF#$"refs/tags/v"}"
+        
       - name: Print Version
         run: |
           echo ${{steps.tagger.outputs.version_tag}}
+          echo ${{steps.tagger.outputs.version}}
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -47,10 +50,10 @@ jobs:
           platforms: linux/amd64
           tags: ${{ env.REGISTRY }}/${{steps.tagger.outputs.version_tag}}
           build-args: |
-            ${{steps.tagger.outputs.version_tag}}
+            ${{steps.tagger.outputs.version}}
 
       - name: Replace Version in Chart.yaml
-        run: sed -i 's/VERSION/${{ steps.tagger.outputs.version_tag }}/g' ./chart/Chart.yaml
+        run: sed -i 's/VERSION/${{ steps.tagger.outputs.version }}/g' ./chart/Chart.yaml
 
       - name: Publish Helm chart
         uses: stefanprodan/helm-gh-pages@master
