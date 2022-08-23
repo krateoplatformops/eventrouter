@@ -9,12 +9,6 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-#imagePullSecrets:
-#  - name: cr-token
-
-nameOverride: ""
-fullnameOverride: ""
-
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
