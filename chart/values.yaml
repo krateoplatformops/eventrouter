@@ -37,7 +37,7 @@ securityContext: {}
 
 podEnv:
   - name: EVENT_SERVICE_URL
-    value: http://log-service-service.krateo-system.svc
+    value: http://event-service-service.krateo-system.svc
   - name: EVENT_ROUTER_DEBUG
     value: "false"
 
