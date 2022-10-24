@@ -58,3 +58,11 @@ func EnvDuration(key string, defaultValue time.Duration) time.Duration {
 	}
 	return res
 }
+
+func FixKubernetesServicePortEventually() {
+	const key = "KUBERNETES_SERVICE_PORT"
+	// hack to fix wrong kubernetes service port env var
+	if strings.HasPrefix(os.Getenv(key), "tcp") {
+		os.Setenv(key, "443")
+	}
+}
