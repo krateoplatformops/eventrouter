@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -60,6 +61,11 @@ func main() {
 		Str("service", serviceName).
 		Timestamp().
 		Logger()
+
+	// hack to fix wrong kubernetes service port env var
+	if strings.HasPrefix(os.Getenv("KUBERNETES_SERVICE_PORT"), "tcp") {
+		os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+	}
 
 	// Kubernetes configuration
 	var cfg *rest.Config
