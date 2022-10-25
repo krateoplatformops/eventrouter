@@ -9,7 +9,7 @@ env:
 
 jobs:
   package:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
@@ -49,6 +49,13 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{steps.tagger.outputs.version-without-v}}
           build-args: |
             ${{steps.tagger.outputs.version-without-v}}
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19' # The Go version to download (if necessary) and use.
+  
+      - name: Generate CRDs
+        run: go generate ./...
 
       - name: Replace Version in Chart.yaml
         run: sed -i 's/VERSION/${{ steps.tagger.outputs.version-without-v }}/g' ./chart/Chart.yaml

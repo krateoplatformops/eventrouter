@@ -1,0 +1,18 @@
+{
+    "specversion": "1.0",
+    "id": "c4d3a334-6cb9-4e8c-a372-7e0b45942f53",
+    "source": "eventrouter",
+    "type": "event.krateo.io",
+    "datacontenttype": "application/json",
+    "data": {
+        "involvedObject": {
+            "apiVersion": "eks.aws.crossplane.io/v1alpha1",
+            "kind": "NodeGroup",
+            "name": "test-1-ng",
+            "resourceVersion": "17223",
+            "uid": "6365c158-8ee1-4d36-a33a-ba3cc0958ee0"
+        },
+        "lastTimestamp": "2022-08-18T15:12:09Z",
+        "message": "cannot create EKS node group: ResourceInUseException: Cluster: test-1 is not in a valid state"
+    }
+}

@@ -27,6 +27,12 @@ SED=$(shell which sed)
 tidy: ## go mod tidy
 	go mod tidy
 
+
+.PHONY: generate
+generate: tidy ## generate all CRDs
+	go generate ./...
+
+
 .PHONY: test
 test: ## go test
 	go test -v ./...

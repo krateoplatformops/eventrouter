@@ -37,8 +37,6 @@ func main() {
 		support.EnvDuration("EVENT_ROUTER_THROTTLE_PERIOD", 0), "throttle period")
 	namespace := flag.String("namespace",
 		support.EnvString("EVENT_ROUTER_NAMESPACE", ""), "namespace to list and watch")
-	eventServiceUrl := flag.String("event-service-url",
-		support.EnvString("EVENT_SERVICE_URL", "https://api.krateo.site/event/"), "event service url")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
@@ -81,10 +79,9 @@ func main() {
 		log.Fatal().Err(err).Msg("creating the kubernetes clientset")
 	}
 
-	handler, err := router.NewNotifier(router.NotifierOpts{
-		RESTConfig:      cfg,
-		EventServiceUrl: *eventServiceUrl,
-		Log:             log,
+	handler, err := router.NewPusher(router.PusherOpts{
+		RESTConfig: cfg,
+		Log:        log,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("creating the event notifier")
@@ -112,7 +109,6 @@ func main() {
 			Bool("debug", *debug).
 			Dur("resyncInterval", *resyncInterval).
 			Dur("throttlePeriod", *throttlePeriod).
-			Str("eventServiceUrl", *eventServiceUrl).
 			Str("namespace", *namespace).
 			Msgf("Starting %s", serviceName)
 

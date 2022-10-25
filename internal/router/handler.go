@@ -15,13 +15,12 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-type NotifierOpts struct {
-	RESTConfig      *rest.Config
-	EventServiceUrl string
-	Log             zerolog.Logger
+type PusherOpts struct {
+	RESTConfig *rest.Config
+	Log        zerolog.Logger
 }
 
-func NewNotifier(opts NotifierOpts) (EventHandler, error) {
+func NewPusher(opts PusherOpts) (EventHandler, error) {
 	transport := http.DefaultTransport
 	if opts.Log.Debug().Enabled() {
 		transport = &support.HttpTracer{RoundTripper: http.DefaultTransport}
@@ -32,10 +31,9 @@ func NewNotifier(opts NotifierOpts) (EventHandler, error) {
 		return nil, err
 	}
 
-	return &notifier{
-		objectResolver:  objectResolver,
-		eventServiceUrl: opts.EventServiceUrl,
-		log:             opts.Log,
+	return &pusher{
+		objectResolver: objectResolver,
+		log:            opts.Log,
 		httpClient: &http.Client{
 			Transport: transport,
 			Timeout:   40 * time.Second,
@@ -43,16 +41,15 @@ func NewNotifier(opts NotifierOpts) (EventHandler, error) {
 	}, nil
 }
 
-var _ EventHandler = (*notifier)(nil)
+var _ EventHandler = (*pusher)(nil)
 
-type notifier struct {
-	objectResolver  *objects.ObjectResolver
-	eventServiceUrl string
-	httpClient      *http.Client
-	log             zerolog.Logger
+type pusher struct {
+	objectResolver *objects.ObjectResolver
+	httpClient     *http.Client
+	log            zerolog.Logger
 }
 
-func (c *notifier) Handle(evt corev1.Event) {
+func (c *pusher) Handle(evt corev1.Event) {
 	ref := &evt.InvolvedObject
 
 	deploymentId, err := findDeploymentID(c.objectResolver, ref)
@@ -77,30 +74,30 @@ func (c *notifier) Handle(evt corev1.Event) {
 		return
 	}
 
-	msg := NewNotification(deploymentId, &evt)
+	msg := NewEventInfo(deploymentId, &evt)
 	if err := c.notify(msg); err != nil {
 		c.log.Warn().Str("involvedObject", ref.Name).Msgf("sending notification: %s", err.Error())
 	}
 }
 
-func (c *notifier) notify(evt Notification) error {
+func (c *pusher) notify(url string, evt EventInfo) error {
 	dat, err := json.Marshal(&evt)
 	if err != nil {
-		return fmt.Errorf("sending notification (deploymentId:%s): %w", evt.TransactionId, err)
+		return fmt.Errorf("sending notification (deploymentId:%s): %w", evt.DeploymentId, err)
 	}
 
 	ctx, cncl := context.WithTimeout(context.Background(), time.Second*40)
 	defer cncl()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.eventServiceUrl, bytes.NewBuffer(dat))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(dat))
 	if err != nil {
-		return fmt.Errorf("sending notification (deploymentId:%s): %w", evt.TransactionId, err)
+		return fmt.Errorf("sending notification (url:%s, deploymentId:%s): %w", url, evt.DeploymentId, err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	_, err = c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("sending notification (deploymentId:%s): %w", evt.TransactionId, err)
+		return fmt.Errorf("sending notification (url:%s,deploymentId:%s): %w", url, evt.DeploymentId, err)
 	}
 
 	return nil
