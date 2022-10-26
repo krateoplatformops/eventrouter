@@ -35,6 +35,7 @@ func NewPusher(opts PusherOpts) (EventHandler, error) {
 	return &pusher{
 		objectResolver: objectResolver,
 		log:            opts.Log,
+		verbose:        opts.Verbose,
 		httpClient: httpHelper.ClientFromOpts(httpHelper.ClientOpts{
 			Verbose:  opts.Verbose,
 			Insecure: opts.Insecure,
@@ -48,6 +49,7 @@ type pusher struct {
 	objectResolver *objects.ObjectResolver
 	httpClient     *http.Client
 	log            zerolog.Logger
+	verbose        bool
 }
 
 func (c *pusher) Handle(evt corev1.Event) {
@@ -59,7 +61,7 @@ func (c *pusher) Handle(evt corev1.Event) {
 		return
 	}
 
-	if c.log.Debug().Enabled() {
+	if c.verbose {
 		c.log.Debug().
 			Str("name", evt.Name).
 			Str("kind", ref.Kind).
