@@ -1,0 +1,20 @@
+{
+    "type":"Warning",
+    "reason":"CannotCreateExternalResource",
+    "deploymentId":"XXXXXXAAA1212121",
+    "time":1660835529,
+    "message":"cannot create EKS node group: ResourceInUseException: Cluster: test-1 is not in a valid state",
+    "source":"managed/nodegroup",
+    "involvedObject":{
+       "apiVersion":"eks.aws.crossplane.io/v1alpha1",
+       "kind":"NodeGroup",
+       "name":"test-1-ng",
+       "uid":"6365c158-8ee1-4d36-a33a-ba3cc0958ee0"
+    },
+    "metadata":{
+       "creationTimestamp":"2022-10-26T17:25:12+02:00",
+       "name":"test-1-ng.170c791ccd13d0cd",
+       "namespace":"default",
+       "uid":"6aa0a50b-1b5b-46e0-b5ec-a1118286f0c4"
+    }
+ }
