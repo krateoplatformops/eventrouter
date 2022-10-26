@@ -113,16 +113,16 @@ func (er *EventRouter) onEvent(event *corev1.Event) {
 		return
 	}
 
+	if !objects.Accept(&event.InvolvedObject) {
+		return
+	}
+
 	er.log.Debug().
 		Str("msg", event.Message).
 		Str("namespace", event.Namespace).
 		Str("reason", event.Reason).
 		Str("involvedObject", event.InvolvedObject.Name).
 		Msg("Received event")
-
-	if !objects.Accept(&event.InvolvedObject) {
-		return
-	}
 
 	er.handler.Handle(*event.DeepCopy())
 }

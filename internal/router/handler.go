@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/krateoplatformops/eventrouter/apis/v1alpha1"
+	httpHelper "github.com/krateoplatformops/eventrouter/internal/helpers/http"
 	"github.com/krateoplatformops/eventrouter/internal/objects"
-	"github.com/krateoplatformops/eventrouter/internal/support"
+
 	"github.com/rs/zerolog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,14 +22,11 @@ import (
 type PusherOpts struct {
 	RESTConfig *rest.Config
 	Log        zerolog.Logger
+	Verbose    bool
+	Insecure   bool
 }
 
 func NewPusher(opts PusherOpts) (EventHandler, error) {
-	transport := http.DefaultTransport
-	if opts.Log.Debug().Enabled() {
-		transport = &support.HttpTracer{RoundTripper: http.DefaultTransport}
-	}
-
 	objectResolver, err := objects.NewObjectResolver(opts.RESTConfig)
 	if err != nil {
 		return nil, err
@@ -37,10 +35,10 @@ func NewPusher(opts PusherOpts) (EventHandler, error) {
 	return &pusher{
 		objectResolver: objectResolver,
 		log:            opts.Log,
-		httpClient: &http.Client{
-			Transport: transport,
-			Timeout:   40 * time.Second,
-		},
+		httpClient: httpHelper.ClientFromOpts(httpHelper.ClientOpts{
+			Verbose:  opts.Verbose,
+			Insecure: opts.Insecure,
+		}),
 	}, nil
 }
 

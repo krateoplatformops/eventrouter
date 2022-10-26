@@ -31,6 +31,8 @@ func main() {
 	kubeconfig := flag.String(clientcmd.RecommendedConfigPathFlag, "", "absolute path to the kubeconfig file")
 	debug := flag.Bool("debug",
 		support.EnvBool("EVENT_ROUTER_DEBUG", false), "dump verbose output")
+	insecure := flag.Bool("insecure", support.EnvBool("EVENT_ROUTER_INSECURE", false),
+		"allow insecure server connections when using SSL")
 	resyncInterval := flag.Duration("resync-interval",
 		support.EnvDuration("EVENT_ROUTER_RESYNC_INTERVAL", time.Minute*3), "resync interval")
 	throttlePeriod := flag.Duration("throttle-period",
@@ -82,6 +84,8 @@ func main() {
 	handler, err := router.NewPusher(router.PusherOpts{
 		RESTConfig: cfg,
 		Log:        log,
+		Verbose:    *debug,
+		Insecure:   *insecure,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("creating the event notifier")
