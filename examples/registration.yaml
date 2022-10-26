@@ -1,7 +1,7 @@
 apiVersion: eventrouter.krateo.io/v1alpha1
 kind: Registration
 metadata:
-  name: kafka-middleware-registration
+  name: httpbin-registration
 spec:
-  serviceName: Kafka middleware
-  endpoint: http://kafka-service.krateo-system.svc
+  serviceName: HTTPBin
+  endpoint: https://httpbin.org
