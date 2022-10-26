@@ -6,6 +6,7 @@ require (
 	github.com/crossplane/crossplane-runtime v0.18.0
 	github.com/crossplane/crossplane-tools v0.0.0-20220901191540-806c0b01097b
 	github.com/rs/zerolog v1.27.0
+	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
@@ -43,6 +44,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect

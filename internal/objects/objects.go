@@ -45,6 +45,26 @@ func NewObjectResolver(restConfig *rest.Config) (*ObjectResolver, error) {
 	}, nil
 }
 
+func (r *ObjectResolver) List(ctx context.Context, gvk schema.GroupVersionKind, ns string) (*unstructured.UnstructuredList, error) {
+	dri, err := r.getResourceInterfaceForGVR(gvk, ns)
+	if err != nil {
+		if isNoKindMatchError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	all, err := dri.List(ctx, metav1.ListOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return all, nil
+}
+
 func (r *ObjectResolver) ResolveReference(ctx context.Context, ref *corev1.ObjectReference) (*unstructured.Unstructured, error) {
 	dri, err := r.getResourceInterfaceForGVR(ref.GroupVersionKind(), ref.Namespace)
 	if err != nil {
@@ -54,8 +74,7 @@ func (r *ObjectResolver) ResolveReference(ctx context.Context, ref *corev1.Objec
 		return nil, err
 	}
 
-	res := &unstructured.Unstructured{}
-	res, err = dri.Get(ctx, ref.Name, metav1.GetOptions{})
+	res, err := dri.Get(ctx, ref.Name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil

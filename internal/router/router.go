@@ -26,7 +26,6 @@ type EventRouter struct {
 	handler        EventHandler
 	informer       cache.SharedInformer
 	throttlePeriod time.Duration
-	fn             EventHandler
 }
 
 type EventRouterOpts struct {
@@ -126,6 +125,4 @@ func (er *EventRouter) onEvent(event *corev1.Event) {
 	}
 
 	er.handler.Handle(*event.DeepCopy())
-
-	return
 }

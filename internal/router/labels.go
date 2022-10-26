@@ -60,7 +60,7 @@ func createPatchData(labels map[string]string) ([]byte, error) {
 
 func wasPatchedByKrateo(obj *corev1.Event) bool {
 	labels := obj.GetLabels()
-	if labels == nil || len(labels) == 0 {
+	if len(labels) == 0 {
 		return false
 	}
 
@@ -78,7 +78,7 @@ func findDeploymentID(resolver *objects.ObjectResolver, ref *corev1.ObjectRefere
 	}
 
 	labels := obj.GetLabels()
-	if labels == nil || len(labels) == 0 {
+	if len(labels) == 0 {
 		return "", nil
 	}
 
