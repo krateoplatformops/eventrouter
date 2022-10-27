@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/krateoplatformops/eventrouter/internal/helpers/queue"
 	"github.com/krateoplatformops/eventrouter/internal/router"
 	"github.com/krateoplatformops/eventrouter/internal/support"
 	"github.com/rs/zerolog"
@@ -39,6 +40,10 @@ func main() {
 		support.EnvDuration("EVENT_ROUTER_THROTTLE_PERIOD", 0), "throttle period")
 	namespace := flag.String("namespace",
 		support.EnvString("EVENT_ROUTER_NAMESPACE", ""), "namespace to list and watch")
+	queueMaxCapacity := flag.Int("queue-max-capacity",
+		support.EnvInt("EVENT_ROUTER_QUEUE_MAX_CAPACITY", 10), "notification queue buffer size")
+	queueWorkerThreads := flag.Int("queue-worker-threads",
+		support.EnvInt("EVENT_ROUTER_QUEUE_WORKER_THREADS", 50), "number of worker threads in the notification queue")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
@@ -81,9 +86,15 @@ func main() {
 		log.Fatal().Err(err).Msg("creating the kubernetes clientset")
 	}
 
+	// setup notification worker queue
+	q := queue.NewQueue(*queueMaxCapacity, *queueWorkerThreads)
+	q.Run()
+	defer q.Terminate()
+
 	handler, err := router.NewPusher(router.PusherOpts{
 		RESTConfig: cfg,
 		Log:        log,
+		Queue:      q,
 		Verbose:    *debug,
 		Insecure:   *insecure,
 	})
@@ -114,6 +125,8 @@ func main() {
 			Dur("resyncInterval", *resyncInterval).
 			Dur("throttlePeriod", *throttlePeriod).
 			Str("namespace", *namespace).
+			Int("queueMaxCapacity", *queueMaxCapacity).
+			Int("queueWorkerThreads", *queueWorkerThreads).
 			Msgf("Starting %s", serviceName)
 
 		eventRouter.Run(stop)

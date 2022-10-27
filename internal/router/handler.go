@@ -1,15 +1,12 @@
 package router
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/krateoplatformops/eventrouter/apis/v1alpha1"
 	httpHelper "github.com/krateoplatformops/eventrouter/internal/helpers/http"
+	"github.com/krateoplatformops/eventrouter/internal/helpers/queue"
 	"github.com/krateoplatformops/eventrouter/internal/objects"
 
 	"github.com/rs/zerolog"
@@ -21,6 +18,7 @@ import (
 
 type PusherOpts struct {
 	RESTConfig *rest.Config
+	Queue      queue.Queuer
 	Log        zerolog.Logger
 	Verbose    bool
 	Insecure   bool
@@ -34,6 +32,7 @@ func NewPusher(opts PusherOpts) (EventHandler, error) {
 
 	return &pusher{
 		objectResolver: objectResolver,
+		notifyQueue:    opts.Queue,
 		log:            opts.Log,
 		verbose:        opts.Verbose,
 		httpClient: httpHelper.ClientFromOpts(httpHelper.ClientOpts{
@@ -47,6 +46,7 @@ var _ EventHandler = (*pusher)(nil)
 
 type pusher struct {
 	objectResolver *objects.ObjectResolver
+	notifyQueue    queue.Queuer
 	httpClient     *http.Client
 	log            zerolog.Logger
 	verbose        bool
@@ -94,39 +94,15 @@ func (c *pusher) Handle(evt corev1.Event) {
 
 func (c *pusher) notifyAll(all map[string]v1alpha1.RegistrationSpec, evt EventInfo) {
 	for _, el := range all {
-		go func(it v1alpha1.RegistrationSpec) {
-			err := c.notify(it, evt)
-			if err != nil {
-				c.log.Error().Err(err).Msgf("Unable to notify %s", it.ServiceName)
-			}
-		}(el)
+		job := newAdvisor(advOpts{
+			httpClient:       c.httpClient,
+			log:              c.log,
+			registrationSpec: el,
+			eventInfo:        evt,
+		})
+
+		c.notifyQueue.Push(job)
 	}
-}
-
-func (c *pusher) notify(reg v1alpha1.RegistrationSpec, evt EventInfo) error {
-	dat, err := json.Marshal(&evt)
-	if err != nil {
-		return fmt.Errorf("cannot encode notification (deploymentId:%s, destinationURL:%s): %w",
-			evt.DeploymentId, reg.Endpoint, err)
-	}
-
-	ctx, cncl := context.WithTimeout(context.Background(), time.Second*40)
-	defer cncl()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reg.Endpoint, bytes.NewBuffer(dat))
-	if err != nil {
-		return fmt.Errorf("cannot create notification (deploymentId:%s, destinationURL:%s): %w",
-			evt.DeploymentId, reg.Endpoint, err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	_, err = c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("cannot send notification (deploymentId:%s, destinationURL:%s): %w",
-			evt.DeploymentId, reg.Endpoint, err)
-	}
-
-	return nil
 }
 
 func (c *pusher) getAllRegistrations(ctx context.Context) (map[string]v1alpha1.RegistrationSpec, error) {
