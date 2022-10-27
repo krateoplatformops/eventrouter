@@ -10,6 +10,7 @@ type InvolvedObject struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
 	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
 	UID        string `json:"uid"`
 }
 
@@ -43,6 +44,7 @@ func NewEventInfo(deploymentID string, evt *corev1.Event) EventInfo {
 			APIVersion: evt.InvolvedObject.APIVersion,
 			Kind:       evt.InvolvedObject.Kind,
 			Name:       evt.InvolvedObject.Name,
+			Namespace:  evt.InvolvedObject.Namespace,
 			UID:        string(evt.InvolvedObject.UID),
 		},
 		Metadata: Metadata{
