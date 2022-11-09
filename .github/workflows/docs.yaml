@@ -1,0 +1,24 @@
+name: Build docs
+
+on:
+  push:
+    paths:
+      - "**.md"
+
+jobs:
+  build:
+    name: Copy file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Rename file
+        run: |
+          mv README.md ${{ github.event.repository.name }}.md
+     - uses: GuillaumeFalourd/copy-push-files@v1
+        with:
+          source_files: ${{ github.event.repository.name }}.md
+          remote_repository: https://github.com/krateoplatformops/krateo-docs
+          access_token: ${{ secrets.HELM_CHARTS_BOT }}
+          target_dir: docs/tools
+          target_branch: main
