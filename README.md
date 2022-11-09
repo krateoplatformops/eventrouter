@@ -7,6 +7,7 @@ this service will POST to the specified _endpoint_ a JSON containing the event i
 
 Here a sample event info:
 
+
 ```json
 {
     "type":"Warning",
