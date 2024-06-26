@@ -1,0 +1,11 @@
+builds:
+- id: event-router
+  #main: ./cmd/main.go
+  env:
+  - CGO_ENABLED=0
+  ldflags:
+  - -s -w
+  - -extldflags "-static"
+defaultPlatforms:
+- linux/arm64
+#- linux/amd64
