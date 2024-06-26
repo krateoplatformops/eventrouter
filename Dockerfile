@@ -24,31 +24,17 @@ COPY internal/ internal/
 COPY main.go main.go
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o /bin/app ./main.go && \
+RUN CGO_ENABLED=0 GO111MODULE=on go build -a -o /bin/app ./main.go && \
     strip /bin/app
 
 # Deployment environment
 # ----------------------
-FROM scratch
+FROM gcr.io/distroless/static:nonroot
 
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 COPY --from=builder /bin/app /bin/app
 
-# Metadata params
-ARG VERSION
-ARG BUILD_DATE
-ARG REPO_URL
-ARG LAST_COMMIT
-
-
-# Metadata
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url=$REPO_URL \
-      org.label-schema.vcs-ref=$LAST_COMMIT \
-      org.label-schema.version=$VERSION \
-      org.label-schema.docker.schema-version="1.0"
+USER nonroot:nonroot
 
 
 ENTRYPOINT ["/bin/app"]
