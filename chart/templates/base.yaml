@@ -1,3 +1,0 @@
-{{ include "helm-chart-library.serviceaccount" . }}
----
-{{ include "helm-chart-library.deployment" . }}
