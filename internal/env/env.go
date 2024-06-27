@@ -1,4 +1,4 @@
-package support
+package env
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func EnvString(key, defaultValue string) string {
+func String(key, defaultValue string) string {
 	val, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
@@ -15,7 +15,7 @@ func EnvString(key, defaultValue string) string {
 	return val
 }
 
-func EnvInt(key string, defaultValue int) int {
+func Int(key string, defaultValue int) int {
 	val, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
@@ -33,7 +33,7 @@ func EnvInt(key string, defaultValue int) int {
 	return res
 }
 
-func EnvBool(key string, defaultValue bool) bool {
+func Bool(key string, defaultValue bool) bool {
 	val, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
@@ -46,7 +46,7 @@ func EnvBool(key string, defaultValue bool) bool {
 	return res
 }
 
-func EnvDuration(key string, defaultValue time.Duration) time.Duration {
+func Duration(key string, defaultValue time.Duration) time.Duration {
 	val, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
@@ -59,10 +59,10 @@ func EnvDuration(key string, defaultValue time.Duration) time.Duration {
 	return res
 }
 
-func FixKubernetesServicePortEventually() {
-	const key = "KUBERNETES_SERVICE_PORT"
-	// hack to fix wrong kubernetes service port env var
-	if strings.HasPrefix(os.Getenv(key), "tcp") {
-		os.Setenv(key, "443")
-	}
-}
+// func FixKubernetesServicePortEventually() {
+// 	const key = "KUBERNETES_SERVICE_PORT"
+// 	// hack to fix wrong kubernetes service port env var
+// 	if strings.HasPrefix(os.Getenv(key), "tcp") {
+// 		os.Setenv(key, "443")
+// 	}
+// }

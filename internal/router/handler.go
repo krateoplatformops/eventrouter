@@ -9,17 +9,16 @@ import (
 	"github.com/krateoplatformops/eventrouter/internal/helpers/queue"
 	"github.com/krateoplatformops/eventrouter/internal/objects"
 
-	"github.com/rs/zerolog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 )
 
 type PusherOpts struct {
 	RESTConfig *rest.Config
 	Queue      queue.Queuer
-	Log        zerolog.Logger
 	Verbose    bool
 	Insecure   bool
 }
@@ -33,7 +32,6 @@ func NewPusher(opts PusherOpts) (EventHandler, error) {
 	return &pusher{
 		objectResolver: objectResolver,
 		notifyQueue:    opts.Queue,
-		log:            opts.Log,
 		verbose:        opts.Verbose,
 		httpClient: httpHelper.ClientFromOpts(httpHelper.ClientOpts{
 			Verbose:  opts.Verbose,
@@ -48,7 +46,6 @@ type pusher struct {
 	objectResolver *objects.ObjectResolver
 	notifyQueue    queue.Queuer
 	httpClient     *http.Client
-	log            zerolog.Logger
 	verbose        bool
 }
 
@@ -57,33 +54,31 @@ func (c *pusher) Handle(evt corev1.Event) {
 
 	deploymentId, err := findDeploymentID(c.objectResolver, ref)
 	if err != nil {
-		c.log.Warn().Str("involvedObject", ref.Name).Msgf("looking for deploymentId: %s", err.Error())
+		klog.ErrorS(err, "looking for deploymentId",
+			"involvedObject", ref.Name)
 		return
 	}
 
 	if c.verbose {
-		c.log.Debug().
-			Str("name", evt.Name).
-			Str("kind", ref.Kind).
-			Str("apiGroup", evt.InvolvedObject.GroupVersionKind().Group).
-			Str("reason", evt.Reason).
-			Str("deploymentId", deploymentId).
-			Msg(evt.Message)
+		klog.V(4).InfoS(evt.Message,
+			"name", evt.Name,
+			"kind", ref.Kind,
+			"apiGroup", evt.InvolvedObject.GroupVersionKind().Group,
+			"reason", evt.Reason,
+			"deploymentId", deploymentId)
 	}
 
 	err = patchWithLabels(c.objectResolver, &evt, deploymentId)
 	if err != nil {
-		c.log.Error().Err(err).
-			Str("involvedObject", ref.Name).
-			Msg("Unable to patch with labels.")
+		klog.ErrorS(err, "unable to patch with labels",
+			"involvedObject", ref.Name)
 		return
 	}
 
 	all, err := c.getAllRegistrations(context.Background())
 	if err != nil {
-		c.log.Error().Err(err).
-			Str("involvedObject", ref.Name).
-			Msg("Unable to list registrations.")
+		klog.ErrorS(err, "unable to list registrations",
+			"involvedObject", ref.Name)
 		return
 	}
 
@@ -96,7 +91,6 @@ func (c *pusher) notifyAll(all map[string]v1alpha1.RegistrationSpec, evt EventIn
 	for _, el := range all {
 		job := newAdvisor(advOpts{
 			httpClient:       c.httpClient,
-			log:              c.log,
 			registrationSpec: el,
 			eventInfo:        evt,
 		})
@@ -124,17 +118,15 @@ func (c *pusher) getAllRegistrations(ctx context.Context) (map[string]v1alpha1.R
 	for _, el := range all.Items {
 		serviceName, _, err := unstructured.NestedString(el.Object, "spec", "serviceName")
 		if err != nil {
-			c.log.Error().Err(err).
-				Str("registration", el.GetName()).
-				Msg("Reading 'serviceName' attribute.")
+			klog.ErrorS(err, "unable to read 'serviceName' attribute",
+				"registration", el.GetName())
 			continue
 		}
 
 		endpoint, _, err := unstructured.NestedString(el.Object, "spec", "endpoint")
 		if err != nil {
-			c.log.Error().Err(err).
-				Str("registration", el.GetName()).
-				Msg("Reading 'endpoint' attribute.")
+			klog.ErrorS(err, "unable to read 'endpoint' attribute",
+				"registration", el.GetName())
 			continue
 		}
 
