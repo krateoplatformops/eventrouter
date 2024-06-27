@@ -35,7 +35,7 @@ type advisor struct {
 func (c *advisor) Job() {
 	err := c.notify()
 	if err != nil {
-		klog.Errorf("unable to notify %s: %w", c.reg.ServiceName, err)
+		klog.Errorf("unable to notify %s: %s", c.reg.ServiceName, err.Error())
 	}
 }
 
