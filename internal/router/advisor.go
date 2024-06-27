@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/krateoplatformops/eventrouter/apis/v1alpha1"
-	"github.com/rs/zerolog"
+	"k8s.io/klog/v2"
 )
 
 type advOpts struct {
 	httpClient       *http.Client
-	log              zerolog.Logger
 	registrationSpec v1alpha1.RegistrationSpec
 	eventInfo        EventInfo
 }
@@ -22,7 +21,6 @@ type advOpts struct {
 func newAdvisor(opts advOpts) *advisor {
 	return &advisor{
 		httpClient: opts.httpClient,
-		log:        opts.log,
 		reg:        opts.registrationSpec,
 		evt:        opts.eventInfo,
 	}
@@ -30,7 +28,6 @@ func newAdvisor(opts advOpts) *advisor {
 
 type advisor struct {
 	httpClient *http.Client
-	log        zerolog.Logger
 	reg        v1alpha1.RegistrationSpec
 	evt        EventInfo
 }
@@ -38,7 +35,7 @@ type advisor struct {
 func (c *advisor) Job() {
 	err := c.notify()
 	if err != nil {
-		c.log.Error().Err(err).Msgf("Unable to notify %s", c.reg.ServiceName)
+		klog.Errorf("unable to notify %s: %w", c.reg.ServiceName, err)
 	}
 }
 

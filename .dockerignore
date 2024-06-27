@@ -5,5 +5,5 @@
 .vscode
 
 manifests/
-chart/
-examples/
+scripts/
+testdata/

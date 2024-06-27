@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/krateoplatformops/eventrouter/internal/objects"
-	"github.com/rs/zerolog"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/klog/v2"
 )
 
 // EventHandler is the interface used to receive events
@@ -22,7 +22,6 @@ type EventHandler interface {
 // EventRouter is responsible for maintaining a stream of kubernetes
 // system Events and pushing them to another channel for storage
 type EventRouter struct {
-	log            zerolog.Logger
 	handler        EventHandler
 	informer       cache.SharedInformer
 	throttlePeriod time.Duration
@@ -33,7 +32,6 @@ type EventRouterOpts struct {
 	Handler        EventHandler
 	ResyncInterval time.Duration
 	ThrottlePeriod time.Duration
-	Log            zerolog.Logger
 	Namespace      string
 }
 
@@ -51,7 +49,6 @@ func NewEventRouter(opts EventRouterOpts) *EventRouter {
 	return &EventRouter{
 		informer:       si,
 		handler:        opts.Handler,
-		log:            opts.Log,
 		throttlePeriod: opts.ThrottlePeriod,
 	}
 }
@@ -93,14 +90,14 @@ func (er *EventRouter) OnUpdate(objOld interface{}, objNew interface{}) {
 
 // OnDelete should only occur when the system garbage collects events via TTL expiration
 func (er *EventRouter) OnDelete(obj interface{}) {
-	if !er.log.Debug().Enabled() {
+	if !klog.V(6).Enabled() {
 		return
 	}
 
 	e := obj.(*corev1.Event)
 	// NOTE: This should *only* happen on TTL expiration there
 	// is no reason to push this to a collector
-	er.log.Debug().Msgf("Event deleted from the system: %v", e)
+	klog.V(6).Infof("Event deleted from the system: %v", e)
 }
 
 func (er *EventRouter) onEvent(event *corev1.Event) {
@@ -117,12 +114,11 @@ func (er *EventRouter) onEvent(event *corev1.Event) {
 		return
 	}
 
-	er.log.Debug().
-		Str("msg", event.Message).
-		Str("namespace", event.Namespace).
-		Str("reason", event.Reason).
-		Str("involvedObject", event.InvolvedObject.Name).
-		Msg("Received event")
+	klog.V(4).InfoS("Received event",
+		"msg", event.Message,
+		"namespace", event.Namespace,
+		"reason", event.Reason,
+		"involvedObject", event.InvolvedObject.Name)
 
 	er.handler.Handle(*event.DeepCopy())
 }

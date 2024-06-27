@@ -9,7 +9,6 @@ import (
 func Accept(ref *corev1.ObjectReference) bool {
 	accept := []string{
 		".krateo.io",
-		".crossplane.io",
 	}
 
 	apiGroup := ref.GroupVersionKind().Group

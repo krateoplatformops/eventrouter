@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	keyDeploymentID = "deploymentId"
-	keyPatchedBy    = "krateo.io/patched-by"
+	keyCompositionID = "krateo.io/composition-id"
+	keyPatchedBy     = "krateo.io/patched-by"
 )
 
 func patchWithLabels(resolver *objects.ObjectResolver, evt *corev1.Event, deploymentId string) error {
 	extras, err := createPatchData(map[string]string{
-		keyDeploymentID: deploymentId,
-		keyPatchedBy:    "krateo",
+		keyCompositionID: deploymentId,
+		keyPatchedBy:     "krateo",
 	})
 	if err != nil {
 		return fmt.Errorf("creating patch data: %w", err)
@@ -82,5 +82,5 @@ func findDeploymentID(resolver *objects.ObjectResolver, ref *corev1.ObjectRefere
 		return "", nil
 	}
 
-	return labels[keyDeploymentID], nil
+	return labels[keyCompositionID], nil
 }
