@@ -21,7 +21,7 @@ import (
 type ObjectResolver struct {
 	dynamicClient   dynamic.Interface
 	discoveryClient *discovery.DiscoveryClient
-	mapper          restmapper.DeferredDiscoveryRESTMapper
+	mapper          *restmapper.DeferredDiscoveryRESTMapper
 }
 
 func NewObjectResolver(restConfig *rest.Config) (*ObjectResolver, error) {
@@ -35,13 +35,10 @@ func NewObjectResolver(restConfig *rest.Config) (*ObjectResolver, error) {
 		return nil, err
 	}
 
-	restMapperCache := memory.NewMemCacheClient(discoveryClient)
-	mapper := restmapper.NewDeferredDiscoveryRESTMapper(restMapperCache)
-
 	return &ObjectResolver{
 		dynamicClient:   dynamicClient,
 		discoveryClient: discoveryClient,
-		mapper:          *mapper,
+		mapper:          restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(discoveryClient)),
 	}, nil
 }
 

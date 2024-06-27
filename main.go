@@ -61,13 +61,13 @@ func main() {
 		cfg, err = rest.InClusterConfig()
 	}
 	if err != nil {
-		klog.Fatalf("unable to init kubeconfig: %w", err)
+		klog.Fatalf("unable to init kubeconfig: %s", err.Error())
 	}
 
 	// creates the clientset from kubeconfig
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		klog.Fatalf("unable to create kubernetes clientset: %w", err)
+		klog.Fatalf("unable to create kubernetes clientset: %s", err.Error())
 	}
 
 	// setup notification worker queue
@@ -82,7 +82,7 @@ func main() {
 		Insecure:   *insecure,
 	})
 	if err != nil {
-		klog.Fatalf("unable to create the event notifier: %w", err)
+		klog.Fatalf("unable to create the event notifier: %s", err.Error())
 	}
 
 	eventRouter := router.NewEventRouter(router.EventRouterOpts{
@@ -130,7 +130,7 @@ func sigHandler() <-chan struct{} {
 			syscall.SIGILL,  // illegal instruction
 			syscall.SIGFPE)  // floating point - this is why we can't have nice things
 		sig := <-c
-		klog.Info("Signal (%v) detected, shutting down", sig)
+		klog.Infof("Signal (%v) detected, shutting down", sig)
 		close(stop)
 	}()
 	return stop
