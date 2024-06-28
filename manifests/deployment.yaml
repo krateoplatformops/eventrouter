@@ -4,23 +4,20 @@ metadata:
   name: eventrouter
   namespace: demo-system
   labels:
-    eventrouter: "true"
+    app: "eventrouter"
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      eventrouter: "true"
+      app: "eventrouter"
   template:
     metadata:
       labels:
-        eventrouter: "true"
+        app: "eventrouter"
     spec:
       serviceAccountName: eventrouter
-      volumes:
-        - emptyDir: {}
-          name: tmp-dir
       containers:
       - name: eventrouter
         image: kind.local/eventrouter:latest
@@ -33,7 +30,4 @@ spec:
           readOnlyRootFilesystem: false
           runAsNonRoot: true
           runAsUser: 1000
-        volumeMounts:
-          - mountPath: /tmp
-            name: tmp-dir
     
