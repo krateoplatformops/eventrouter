@@ -1,13 +1,11 @@
 apiVersion: v1
-count: 3
-eventTime: null
 firstTimestamp: "2022-08-18T15:12:07Z"
 involvedObject:
   apiVersion: eks.aws.crossplane.io/v1alpha1
   kind: NodeGroup
   name: test-1-ng
   resourceVersion: "17223"
-  uid: 6365c158-8ee1-4d36-a33a-ba3cc0958ee0
+  uid: 6365c158-8ee1-4d36-a33a-ba3cc0958ee1
 kind: Event
 lastTimestamp: "2022-08-18T15:12:09Z"
 message: 'cannot create EKS node group: ResourceInUseException: Cluster: test-1 is
@@ -15,34 +13,10 @@ message: 'cannot create EKS node group: ResourceInUseException: Cluster: test-1 
 metadata:
   annotations:
     external-name: test-1-ng
-  creationTimestamp: "2022-08-18T15:12:07Z"
-  managedFields:
-  - apiVersion: v1
-    fieldsType: FieldsV1
-    fieldsV1:
-      f:count: {}
-      f:firstTimestamp: {}
-      f:involvedObject: {}
-      f:lastTimestamp: {}
-      f:message: {}
-      f:metadata:
-        f:annotations:
-          .: {}
-          f:external-name: {}
-      f:reason: {}
-      f:source:
-        f:component: {}
-      f:type: {}
-    manager: crossplane-aws-provider
-    operation: Update
-    time: "2022-08-18T15:12:07Z"
-  name: test-1-ng.170c791ccd13d0cd
+  name: test-2-ng.170c791ccd13d0cr
   namespace: default
-  resourceVersion: "17248"
-  uid: 90e8c2fe-a54f-4e74-962d-8e6abbce196d
+  #uid: 90e8c2fe-a54f-4e74-962d-8e6abbce196d
 reason: CannotCreateExternalResource
-reportingComponent: ""
-reportingInstance: ""
 source:
   component: managed/nodegroup
 type: Warning
