@@ -15,9 +15,9 @@ const (
 	keyPatchedBy     = "krateo.io/patched-by"
 )
 
-func patchWithLabels(resolver *objects.ObjectResolver, evt *corev1.Event, deploymentId string) error {
+func patchWithLabels(resolver *objects.ObjectResolver, evt *corev1.Event, compositionId string) error {
 	extras, err := createPatchData(map[string]string{
-		keyCompositionID: deploymentId,
+		keyCompositionID: compositionId,
 		keyPatchedBy:     "krateo",
 	})
 	if err != nil {
@@ -31,8 +31,8 @@ func patchWithLabels(resolver *objects.ObjectResolver, evt *corev1.Event, deploy
 		PatchData: extras,
 	})
 	if err != nil {
-		if len(deploymentId) > 0 {
-			return fmt.Errorf("patching event with deploymentId '%s': %w", deploymentId, err)
+		if len(compositionId) > 0 {
+			return fmt.Errorf("patching event with composition id '%s': %w", compositionId, err)
 		} else {
 			return fmt.Errorf("patching event: %w", err)
 		}
@@ -68,7 +68,7 @@ func wasPatchedByKrateo(obj *corev1.Event) bool {
 	return ok
 }
 
-func findDeploymentID(resolver *objects.ObjectResolver, ref *corev1.ObjectReference) (string, error) {
+func findCompositionID(resolver *objects.ObjectResolver, ref *corev1.ObjectReference) (string, error) {
 	obj, err := resolver.ResolveReference(context.Background(), ref)
 	if err != nil {
 		return "", err

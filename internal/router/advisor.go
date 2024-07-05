@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/krateoplatformops/eventrouter/apis/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
 type advOpts struct {
 	httpClient       *http.Client
 	registrationSpec v1alpha1.RegistrationSpec
-	eventInfo        EventInfo
+	eventInfo        corev1.Event
 }
 
 func newAdvisor(opts advOpts) *advisor {
@@ -29,7 +30,7 @@ func newAdvisor(opts advOpts) *advisor {
 type advisor struct {
 	httpClient *http.Client
 	reg        v1alpha1.RegistrationSpec
-	evt        EventInfo
+	evt        corev1.Event
 }
 
 func (c *advisor) Job() {
@@ -40,10 +41,15 @@ func (c *advisor) Job() {
 }
 
 func (c *advisor) notify() error {
+	compositionId := ""
+	if labels := c.evt.GetLabels(); len(labels) > 0 {
+		compositionId = labels[keyCompositionID]
+	}
+
 	dat, err := json.Marshal(c.evt)
 	if err != nil {
-		return fmt.Errorf("cannot encode notification (deploymentId:%s, destinationURL:%s): %w",
-			c.evt.DeploymentId, c.reg.Endpoint, err)
+		return fmt.Errorf("cannot encode notification (compositionId:%s, destinationURL:%s): %w",
+			compositionId, c.reg.Endpoint, err)
 	}
 
 	ctx, cncl := context.WithTimeout(context.Background(), time.Second*40)
@@ -51,15 +57,15 @@ func (c *advisor) notify() error {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.reg.Endpoint, bytes.NewBuffer(dat))
 	if err != nil {
-		return fmt.Errorf("cannot create notification (deploymentId:%s, destinationURL:%s): %w",
-			c.evt.DeploymentId, c.reg.Endpoint, err)
+		return fmt.Errorf("cannot create notification (compositionId:%s, destinationURL:%s): %w",
+			compositionId, c.reg.Endpoint, err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	_, err = c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot send notification (deploymentId:%s, destinationURL:%s): %w",
-			c.evt.DeploymentId, c.reg.Endpoint, err)
+			compositionId, c.reg.Endpoint, err)
 	}
 
 	return nil

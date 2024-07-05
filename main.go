@@ -50,6 +50,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
+	klog.InitFlags(nil)
+
 	flag.Parse()
 
 	// Kubernetes configuration

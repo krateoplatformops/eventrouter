@@ -25,6 +25,7 @@ spec:
         args:
           - --insecure=true
           - --debug=true
+          - --v=6
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false
