@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/krateoplatformops/eventrouter/internal/objects"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -110,9 +108,9 @@ func (er *EventRouter) onEvent(event *corev1.Event) {
 		return
 	}
 
-	if !objects.Accept(&event.InvolvedObject) {
-		return
-	}
+	// if !objects.Accept(&event.InvolvedObject) {
+	// 	return
+	// }
 
 	klog.V(4).InfoS("Received event",
 		"msg", event.Message,

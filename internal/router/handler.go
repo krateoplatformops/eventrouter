@@ -52,10 +52,9 @@ type pusher struct {
 func (c *pusher) Handle(evt corev1.Event) {
 	ref := &evt.InvolvedObject
 
-	deploymentId, err := findDeploymentID(c.objectResolver, ref)
+	compositionId, err := findCompositionID(c.objectResolver, ref)
 	if err != nil {
-		klog.ErrorS(err, "looking for deploymentId",
-			"involvedObject", ref.Name)
+		klog.ErrorS(err, "looking for composition id", "involvedObject", ref.Name)
 		return
 	}
 
@@ -65,29 +64,39 @@ func (c *pusher) Handle(evt corev1.Event) {
 			"kind", ref.Kind,
 			"apiGroup", evt.InvolvedObject.GroupVersionKind().Group,
 			"reason", evt.Reason,
-			"deploymentId", deploymentId)
+			"compositionId", compositionId)
 	}
 
-	err = patchWithLabels(c.objectResolver, &evt, deploymentId)
+	err = patchWithLabels(c.objectResolver, &evt, compositionId)
 	if err != nil {
-		klog.ErrorS(err, "unable to patch with labels",
-			"involvedObject", ref.Name)
+		klog.ErrorS(err, "unable to patch with labels", "involvedObject", ref.Name)
 		return
 	}
 
 	all, err := c.getAllRegistrations(context.Background())
 	if err != nil {
-		klog.ErrorS(err, "unable to list registrations",
-			"involvedObject", ref.Name)
+		klog.ErrorS(err, "unable to list registrations", "involvedObject", ref.Name)
 		return
 	}
 
-	msg := NewEventInfo(deploymentId, &evt)
+	if len(evt.ManagedFields) == 0 {
+		evt.ManagedFields = nil
+	}
 
-	c.notifyAll(all, msg)
+	labels := evt.GetLabels()
+	if labels == nil {
+		labels = map[string]string{
+			keyCompositionID: compositionId,
+		}
+	} else {
+		labels[keyCompositionID] = compositionId
+	}
+	evt.SetLabels(labels)
+
+	c.notifyAll(all, evt)
 }
 
-func (c *pusher) notifyAll(all map[string]v1alpha1.RegistrationSpec, evt EventInfo) {
+func (c *pusher) notifyAll(all map[string]v1alpha1.RegistrationSpec, evt corev1.Event) {
 	for _, el := range all {
 		job := newAdvisor(advOpts{
 			httpClient:       c.httpClient,

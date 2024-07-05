@@ -1,22 +1,51 @@
 apiVersion: v1
-firstTimestamp: "2022-08-18T15:12:07Z"
-involvedObject:
-  apiVersion: eks.aws.crossplane.io/v1alpha1
-  kind: NodeGroup
-  name: test-1-ng
-  resourceVersion: "17223"
-  uid: 6365c158-8ee1-4d36-a33a-ba3cc0958ee1
-kind: Event
-lastTimestamp: "2022-08-18T15:12:09Z"
-message: 'cannot create EKS node group: ResourceInUseException: Cluster: test-1 is
-  not in a valid state'
+kind: Service
 metadata:
-  annotations:
-    external-name: test-1-ng
-  name: test-2-ng.170c791ccd13d0cr
-  namespace: default
+  name: fake-service-1
+  namespace: demo-system
+  labels:
+    krateo.io/composition-id: abcde12345
+  creationTimestamp: "2024-07-05T07:32:32Z"
+  #uid: 383b7f73-bdfe-4817-a06d-b38e6e655689
+spec:
+  clusterIP: 10.96.139.206
+  clusterIPs:
+  - 10.96.139.206
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: sse
+    nodePort: 30081
+    port: 80
+    protocol: TCP
+    targetPort: 8181
+  selector:
+    app: eventsse
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Event
+metadata:
+  name: fake-event-1
+  namespace: demo-system
   #uid: 90e8c2fe-a54f-4e74-962d-8e6abbce196d
-reason: CannotCreateExternalResource
-source:
-  component: managed/nodegroup
 type: Warning
+firstTimestamp: "2024-07-05T07:33:07Z"
+lastTimestamp: "2024-07-05T07:33:09Z"
+message: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...'
+involvedObject:
+  apiVersion: v1
+  kind: Service
+  name: fake-service-1
+  namespace: demo-system
+  #resourceVersion: "17223"
+  uid: 383b7f73-bdfe-4817-a06d-b38e6e655689
+reason: LoremIpsum
+source:
+  component: krateo
