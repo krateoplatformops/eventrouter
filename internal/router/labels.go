@@ -58,13 +58,16 @@ func createPatchData(labels map[string]string) ([]byte, error) {
 	return json.Marshal(patch)
 }
 
-func wasPatchedByKrateo(obj *corev1.Event) bool {
+func hasCompositionId(obj *corev1.Event) bool {
 	labels := obj.GetLabels()
 	if len(labels) == 0 {
 		return false
 	}
 
-	_, ok := labels[keyPatchedBy]
+	val, ok := labels[keyCompositionID]
+	if len(val) == 0 {
+		return false
+	}
 	return ok
 }
 

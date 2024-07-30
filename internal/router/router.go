@@ -99,7 +99,18 @@ func (er *EventRouter) OnDelete(obj interface{}) {
 }
 
 func (er *EventRouter) onEvent(event *corev1.Event) {
-	if wasPatchedByKrateo(event) {
+	klog.V(4).InfoS("Received event",
+		"msg", event.Message,
+		"namespace", event.Namespace,
+		"reason", event.Reason,
+		"involvedObject", event.InvolvedObject.Name)
+
+	if hasCompositionId(event) {
+		klog.V(4).InfoS("CompositionID already present",
+			"msg", event.Message,
+			"namespace", event.Namespace,
+			"reason", event.Reason,
+			"involvedObject", event.InvolvedObject.Name)
 		return
 	}
 
@@ -111,12 +122,6 @@ func (er *EventRouter) onEvent(event *corev1.Event) {
 	// if !objects.Accept(&event.InvolvedObject) {
 	// 	return
 	// }
-
-	klog.V(4).InfoS("Received event",
-		"msg", event.Message,
-		"namespace", event.Namespace,
-		"reason", event.Reason,
-		"involvedObject", event.InvolvedObject.Name)
 
 	er.handler.Handle(*event.DeepCopy())
 }
