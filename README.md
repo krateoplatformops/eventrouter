@@ -1,8 +1,11 @@
 # EventRouter
 
-This service serves as an active watcher of event resource in the kubernetes system, which takes those events and pushes them to a user specified _HTTP hook_ (called _Registration_).
+This service serves as an active watcher of event resource in the kubernetes system, which:
 
-this service will POST to the specified _endpoint_ a JSON containing the event info.
+- consider only events related to _involvedObjects_ with a composition identifier
+- takes those events and pushes them to a user specified _HTTP hook_ (called _Registration_)
+
+The service will POST to the specified _endpoint_ a JSON containing the event info.
 
 Here a sample event info:
 
