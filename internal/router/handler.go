@@ -47,6 +47,7 @@ type pusher struct {
 	notifyQueue    queue.Queuer
 	httpClient     *http.Client
 	verbose        bool
+	patch          bool
 }
 
 func (c *pusher) Handle(evt corev1.Event) {
@@ -65,12 +66,6 @@ func (c *pusher) Handle(evt corev1.Event) {
 			"apiGroup", evt.InvolvedObject.GroupVersionKind().Group,
 			"reason", evt.Reason,
 			"compositionId", compositionId)
-	}
-
-	err = patchWithLabels(c.objectResolver, &evt, compositionId)
-	if err != nil {
-		klog.ErrorS(err, "unable to patch with labels", "involvedObject", ref.Name)
-		return
 	}
 
 	all, err := c.getAllRegistrations(context.Background())
