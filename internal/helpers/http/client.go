@@ -26,7 +26,7 @@ func ClientFromOpts(opts ClientOpts) *http.Client {
 	}
 
 	if opts.Verbose {
-		transport = &verboseTracer{transport}
+		transport = &Tracer{transport}
 	}
 
 	timeout := 20 * time.Second
