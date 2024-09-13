@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/krateoplatformops/eventrouter/internal/env"
+	httputil "github.com/krateoplatformops/eventrouter/internal/helpers/http"
 	"github.com/krateoplatformops/eventrouter/internal/helpers/queue"
 	"github.com/krateoplatformops/eventrouter/internal/router"
 	"k8s.io/client-go/kubernetes"
@@ -64,6 +66,12 @@ func main() {
 	}
 	if err != nil {
 		klog.Fatalf("unable to init kubeconfig: %s", err.Error())
+	}
+
+	if klog.V(4).Enabled() {
+		cfg.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+			return &httputil.Tracer{RoundTripper: rt}
+		}
 	}
 
 	// creates the clientset from kubeconfig

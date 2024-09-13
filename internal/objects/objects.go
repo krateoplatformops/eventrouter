@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
+	"k8s.io/klog/v2"
 )
 
 type ObjectResolver struct {
@@ -66,6 +67,8 @@ func (r *ObjectResolver) ResolveReference(ctx context.Context, ref *corev1.Objec
 	dri, err := r.getResourceInterfaceForGVR(ref.GroupVersionKind(), ref.Namespace)
 	if err != nil {
 		if isNoKindMatchError(err) {
+			klog.V(4).ErrorS(err, "can't find any match for this kind",
+				"gvk", ref.GroupVersionKind(), "name", ref.Name, "namespace", ref.Namespace)
 			return nil, nil
 		}
 		return nil, err
@@ -93,6 +96,8 @@ func (r *ObjectResolver) Patch(ctx context.Context, opts PatchOpts) error {
 	dri, err := r.getResourceInterfaceForGVR(opts.GVK, opts.Namespace)
 	if err != nil {
 		if isNoKindMatchError(err) {
+			klog.V(4).ErrorS(err, "can't find any match for this kind",
+				"gvk", opts.GVK, "name", opts.Name, "namespace", opts.Namespace)
 			return nil
 		}
 		return err
@@ -115,14 +120,13 @@ func (r *ObjectResolver) getResourceInterfaceForGVR(gvk schema.GroupVersionKind,
 	if err != nil {
 		return nil, err
 	}
-	// obtain REST interface for the GVR
+
 	var dr dynamic.ResourceInterface
-	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
-		// namespaced resources should specify the namespace
-		dr = r.dynamicClient.Resource(mapping.Resource).Namespace(namespace)
-	} else {
-		// for cluster-wide resources
+	if mapping.Scope.Name() == meta.RESTScopeNameRoot {
 		dr = r.dynamicClient.Resource(mapping.Resource)
+	} else {
+		dr = r.dynamicClient.Resource(mapping.Resource).
+			Namespace(namespace)
 	}
 
 	return dr, nil
