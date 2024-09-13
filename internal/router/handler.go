@@ -47,7 +47,6 @@ type pusher struct {
 	notifyQueue    queue.Queuer
 	httpClient     *http.Client
 	verbose        bool
-	patch          bool
 }
 
 func (c *pusher) Handle(evt corev1.Event) {
@@ -59,14 +58,12 @@ func (c *pusher) Handle(evt corev1.Event) {
 		return
 	}
 
-	if c.verbose {
-		klog.V(4).InfoS(evt.Message,
-			"name", evt.Name,
-			"kind", ref.Kind,
-			"apiGroup", evt.InvolvedObject.GroupVersionKind().Group,
-			"reason", evt.Reason,
-			"compositionId", compositionId)
-	}
+	klog.V(4).InfoS(evt.Message,
+		"name", evt.Name,
+		"kind", ref.Kind,
+		"apiGroup", evt.InvolvedObject.GroupVersionKind().Group,
+		"reason", evt.Reason,
+		"compositionId", compositionId)
 
 	all, err := c.getAllRegistrations(context.Background())
 	if err != nil {
