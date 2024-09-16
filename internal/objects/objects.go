@@ -23,6 +23,7 @@ type ObjectResolver struct {
 	dynamicClient   dynamic.Interface
 	discoveryClient *discovery.DiscoveryClient
 	mapper          *restmapper.DeferredDiscoveryRESTMapper
+	mapperCache     discovery.CachedDiscoveryInterface
 }
 
 func NewObjectResolver(restConfig *rest.Config) (*ObjectResolver, error) {
@@ -36,11 +37,18 @@ func NewObjectResolver(restConfig *rest.Config) (*ObjectResolver, error) {
 		return nil, err
 	}
 
+	mapperCache := memory.NewMemCacheClient(discoveryClient)
+
 	return &ObjectResolver{
 		dynamicClient:   dynamicClient,
 		discoveryClient: discoveryClient,
-		mapper:          restmapper.NewDeferredDiscoveryRESTMapper(memory.NewMemCacheClient(discoveryClient)),
+		mapper:          restmapper.NewDeferredDiscoveryRESTMapper(mapperCache),
+		mapperCache:     mapperCache,
 	}, nil
+}
+
+func (r *ObjectResolver) InvalidateRESTMapperCache() {
+	r.mapperCache.Invalidate()
 }
 
 func (r *ObjectResolver) List(ctx context.Context, gvk schema.GroupVersionKind, ns string) (*unstructured.UnstructuredList, error) {
@@ -69,7 +77,6 @@ func (r *ObjectResolver) ResolveReference(ctx context.Context, ref *corev1.Objec
 		if isNoKindMatchError(err) {
 			klog.V(4).ErrorS(err, "can't find any match for this kind",
 				"gvk", ref.GroupVersionKind(), "name", ref.Name, "namespace", ref.Namespace)
-			return nil, nil
 		}
 		return nil, err
 	}

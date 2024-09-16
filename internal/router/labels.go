@@ -6,6 +6,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/krateoplatformops/eventrouter/internal/objects"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 )
 
@@ -26,11 +28,25 @@ func hasCompositionId(obj *corev1.Event) bool {
 	return ok
 }
 
-func findCompositionID(resolver *objects.ObjectResolver, ref *corev1.ObjectReference) (string, error) {
-	obj, err := resolver.ResolveReference(context.Background(), ref)
-	if err != nil {
-		return "", err
+func findCompositionID(resolver *objects.ObjectResolver, ref *corev1.ObjectReference) (cid string, err error) {
+	var obj *unstructured.Unstructured
+
+	retryErr := retry.OnError(retry.DefaultRetry,
+		func(e error) bool {
+			if e != nil {
+				resolver.InvalidateRESTMapperCache()
+				return true
+			}
+			return false
+		},
+		func() error {
+			obj, err = resolver.ResolveReference(context.Background(), ref)
+			return err
+		})
+	if retryErr != nil {
+		return "", retryErr
 	}
+
 	if obj == nil {
 		klog.V(4).InfoS("object not found resolving reference",
 			"name", ref.Name,
