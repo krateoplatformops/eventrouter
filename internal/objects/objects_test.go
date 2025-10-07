@@ -34,8 +34,8 @@ const (
 func TestMain(m *testing.M) {
 	xenv.SetTestMode(true)
 
-	clusterName := "kind"
-	testenv := env.New()
+	clusterName = "kind"
+	testenv = env.New()
 
 	testenv.Setup(
 		envfuncs.CreateCluster(kind.NewProvider(), clusterName),
