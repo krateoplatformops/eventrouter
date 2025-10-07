@@ -68,6 +68,8 @@ func main() {
 		klog.Fatalf("unable to init kubeconfig: %s", err.Error())
 	}
 
+	cfg.QPS = -1
+
 	if klog.V(4).Enabled() {
 		cfg.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
 			return &httputil.Tracer{RoundTripper: rt}
